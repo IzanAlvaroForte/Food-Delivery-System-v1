@@ -2,8 +2,10 @@ package com.example.Food_Delivery_System_Cashless.Models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "menu_item_table")
@@ -33,6 +35,9 @@ public class MenuItem {
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     public MenuItem() {
     }
@@ -101,5 +106,10 @@ public class MenuItem {
 
     public void setRestaurant(Restaurant restaurant) {
         this.restaurant = restaurant;
+    }
+
+    // ✅ ADD THE GETTER
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 }
