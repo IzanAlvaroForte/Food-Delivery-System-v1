@@ -32,6 +32,10 @@ public class MenuItem {
 
     private Boolean isAvailable;
 
+    @Pattern(regexp = "SOFT-DELETED/HARD-DELETED/",
+            message = "Invalid status value")
+    private String status;
+
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
@@ -42,13 +46,14 @@ public class MenuItem {
     public MenuItem() {
     }
 
-    public MenuItem(Long id, String menuItemName, String description, BigDecimal price, String category, Boolean isAvailable, Restaurant restaurant) {
+    public MenuItem(Long id, String menuItemName, String description, BigDecimal price, String category, Boolean isAvailable, String status, Restaurant restaurant) {
         this.id = id;
         this.menuItemName = menuItemName;
         this.description = description;
         this.price = price;
         this.category = category;
         this.isAvailable = isAvailable;
+        this.status = status;
         this.restaurant = restaurant;
     }
 
@@ -100,6 +105,14 @@ public class MenuItem {
         isAvailable = available;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public Restaurant getRestaurant() {
         return restaurant;
     }
@@ -108,8 +121,11 @@ public class MenuItem {
         this.restaurant = restaurant;
     }
 
-    // ✅ ADD THE GETTER
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

@@ -19,6 +19,7 @@ public class MenuItemRequestDTO {
     @Digits(integer = 6, fraction = 2, message = "Price format invalid")
     private BigDecimal price;
 
+    private String category;
     private Boolean isAvailable;
 
     @NotNull(message = "Restaurant ID is required")
@@ -27,10 +28,11 @@ public class MenuItemRequestDTO {
     public MenuItemRequestDTO() {
     }
 
-    public MenuItemRequestDTO(String menuItemName, String description, BigDecimal price, Boolean isAvailable, Long restaurantId) {
+    public MenuItemRequestDTO(String menuItemName, String description, BigDecimal price, String category, Boolean isAvailable, Long restaurantId) {
         this.menuItemName = menuItemName;
         this.description = description;
         this.price = price;
+        this.category = category;
         this.isAvailable = isAvailable;
         this.restaurantId = restaurantId;
     }
@@ -59,6 +61,14 @@ public class MenuItemRequestDTO {
         this.price = price;
     }
 
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
     public Boolean getAvailable() {
         return isAvailable;
     }
@@ -74,6 +84,4 @@ public class MenuItemRequestDTO {
     public void setRestaurantId(Long restaurantId) {
         this.restaurantId = restaurantId;
     }
-
-
 }

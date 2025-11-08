@@ -1,14 +1,23 @@
 package com.example.Food_Delivery_System_Cashless.Services;
 
 import com.example.Food_Delivery_System_Cashless.DTOs.MenuItemDTO.MenuItemCreateResponseDTO;
+import com.example.Food_Delivery_System_Cashless.DTOs.MenuItemDTO.MenuItemDeleteResponseDTO;
 import com.example.Food_Delivery_System_Cashless.DTOs.MenuItemDTO.MenuItemRequestDTO;
 import com.example.Food_Delivery_System_Cashless.DTOs.MenuItemDTO.MenuItemUpdateResponseDTO;
 import com.example.Food_Delivery_System_Cashless.Models.MenuItem;
 import com.example.Food_Delivery_System_Cashless.Models.Restaurant;
 import com.example.Food_Delivery_System_Cashless.Repository.MenuItemRepository;
 import com.example.Food_Delivery_System_Cashless.Repository.RestaurantRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MenuItemService {
@@ -69,4 +78,67 @@ public class MenuItemService {
                 savedUpdateMenu.getCreatedAt()
         );
     }
+
+    @Transactional
+    public MenuItemDeleteResponseDTO softDeleteMenuItem(Long id) {
+        MenuItem checkForMenuItem = menuItemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("No menu exist!"));
+        checkForMenuItem.setAvailable(false);
+
+        MenuItem savedMenuItem = menuItemRepository.save(checkForMenuItem);
+
+        return new MenuItemDeleteResponseDTO(
+                savedMenuItem.getId(),
+                savedMenuItem.getMenuItemName(),
+                "SOFT-DELETED",
+                LocalDateTime.now()
+        );
+    }
+
+    @Transactional
+    public void hardDeleteMenuItem(Long id) {
+        MenuItem checkForMenuItem = menuItemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("No menu exist!"));
+        menuItemRepository.delete(checkForMenuItem);
+
+    }
+
+    public List<MenuItemCreateResponseDTO> getAllMenuItem(int page, int size, String sort) {
+        String[] sortParameter = sort.split(",");
+        Sort.Direction direction = sortParameter[1]
+                .equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page,size,
+                Sort.by(direction, sortParameter[0]));
+
+        Page<MenuItem> menuItemPage = menuItemRepository.findAll(pageable);
+
+        return menuItemPage.getContent().stream()
+                .map(theMenuItem -> new MenuItemCreateResponseDTO(
+                        theMenuItem.getId(),
+                        theMenuItem.getMenuItemName(),
+                        theMenuItem.getDescription(),
+                        theMenuItem.getPrice(),
+                        theMenuItem.getCategory(),
+                        theMenuItem.getAvailable(),
+                        theMenuItem.getCreatedAt()
+                )).collect(Collectors.toList());
+
+    }
+
+    public MenuItemCreateResponseDTO getMenuItem(Long id) {
+
+        MenuItem viewMenuItem = menuItemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("No Menu Item Found!"));
+        return new MenuItemCreateResponseDTO(
+                viewMenuItem.getId(),
+                viewMenuItem.getMenuItemName(),
+                viewMenuItem.getDescription(),
+                viewMenuItem.getPrice(),
+                viewMenuItem.getCategory(),
+                viewMenuItem.getAvailable(),
+                viewMenuItem.getCreatedAt()
+        );
+    }
+
 }
