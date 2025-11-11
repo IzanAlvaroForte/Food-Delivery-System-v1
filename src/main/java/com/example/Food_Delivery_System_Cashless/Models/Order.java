@@ -72,7 +72,7 @@ public class Order {
     public Order() {
     }
 
-    public Order(Long id, String orderNumber, Customer customer, Restaurant restaurant, Rider rider, BigDecimal totalAmount, String status, String deliveryAddress, LocalDateTime orderDate, LocalDateTime confirmedAt, LocalDateTime preparingAt, LocalDateTime readyAt, LocalDateTime assignedAt, LocalDateTime pickedUpAt, LocalDateTime deliveredAt, LocalDateTime cancelledAt, String cancelReason, String cancelledBy, List<OrderItem> orderItems) {
+    public Order(Long id, String orderNumber, Customer customer, Restaurant restaurant, Rider rider, BigDecimal totalAmount, String status, String deliveryAddress, LocalDateTime confirmedAt, LocalDateTime preparingAt, LocalDateTime readyAt, LocalDateTime assignedAt, LocalDateTime pickedUpAt, LocalDateTime deliveredAt, LocalDateTime cancelledAt, String cancelReason, String cancelledBy, List<OrderItem> orderItems) {
         this.id = id;
         this.orderNumber = orderNumber;
         this.customer = customer;
@@ -81,7 +81,6 @@ public class Order {
         this.totalAmount = totalAmount;
         this.status = status;
         this.deliveryAddress = deliveryAddress;
-        this.orderDate = orderDate;
         this.confirmedAt = confirmedAt;
         this.preparingAt = preparingAt;
         this.readyAt = readyAt;

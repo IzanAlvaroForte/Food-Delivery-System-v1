@@ -30,6 +30,7 @@ public class MenuItemService {
         this.restaurantRepository = restaurantRepository;
     }
 
+    @Transactional
     public MenuItemCreateResponseDTO createMenuItem(MenuItemRequestDTO menuItemRequestDTO) {
 
         Restaurant findRestoId = restaurantRepository.findById(menuItemRequestDTO.getRestaurantId())
