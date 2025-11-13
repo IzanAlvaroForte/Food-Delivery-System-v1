@@ -15,7 +15,7 @@ public class OrderProgressDTO {
     private LocalDateTime deliveredAt;
     private LocalDateTime cancelledAt;
 
-    public OrderProgressDTO(Order order) {
+    public OrderProgressDTO(LocalDateTime orderDate, LocalDateTime confirmedAt, LocalDateTime preparingAt, LocalDateTime readyAt, LocalDateTime assignedAt, LocalDateTime pickedUpAt, LocalDateTime deliveredAt, LocalDateTime cancelledAt) {
         this.orderDate = orderDate;
         this.confirmedAt = confirmedAt;
         this.preparingAt = preparingAt;
