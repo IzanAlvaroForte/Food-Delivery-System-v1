@@ -16,7 +16,7 @@ public class OrderItem {
     @NotNull(message = "Order is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    private Order foodOrder;
 
     @NotNull(message = "Menu item is required")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -39,9 +39,9 @@ public class OrderItem {
     public OrderItem() {
     }
 
-    public OrderItem(Long id, Order order, MenuItem menuItem, Integer orderQuantity, BigDecimal orderPrice, String specialInstructions) {
+    public OrderItem(Long id, Order foodOrder, MenuItem menuItem, Integer orderQuantity, BigDecimal orderPrice, String specialInstructions) {
         this.id = id;
-        this.order = order;
+        this.foodOrder = foodOrder;
         this.menuItem = menuItem;
         this.orderQuantity = orderQuantity;
         this.orderPrice = orderPrice;
@@ -56,12 +56,12 @@ public class OrderItem {
         this.id = id;
     }
 
-    public Order getOrder() {
-        return order;
+    public Order getFoodOrder() {
+        return foodOrder;
     }
 
-    public void setOrder(Order order) {
-        this.order = order;
+    public void setOrder(Order foodOrder) {
+        this.foodOrder = foodOrder;
     }
 
     public MenuItem getMenuItem() {

@@ -1,6 +1,7 @@
 package com.example.Food_Delivery_System_Cashless.Services;
 
 import com.example.Food_Delivery_System_Cashless.DTOs.OrderDTO.OrderCreateResponseDTO;
+import com.example.Food_Delivery_System_Cashless.DTOs.OrderDTO.OrderDeleteResponseDTO;
 import com.example.Food_Delivery_System_Cashless.DTOs.OrderDTO.OrderProgressDTO;
 import com.example.Food_Delivery_System_Cashless.DTOs.OrderDTO.OrderRequestDTO;
 import com.example.Food_Delivery_System_Cashless.DTOs.OrderItemDTO.OrderItemResponseDTO;
@@ -9,6 +10,7 @@ import com.example.Food_Delivery_System_Cashless.Repository.*;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -55,6 +57,7 @@ public class OrderService {
                     .orElseThrow(() -> new RuntimeException("Rider not found"));
             newOrder.setRider(rider);
         }
+
         newOrder.setStatus("PENDING");
 
         List<OrderItem> orderItems = orderRequestDTO.getItems().stream()
@@ -72,7 +75,6 @@ public class OrderService {
 
                     return orderItem;
                 }).collect(Collectors.toList());
-
         newOrder.setOrderItems(orderItems);
 
         BigDecimal totalAmount = orderItems.stream()
@@ -82,51 +84,167 @@ public class OrderService {
         newOrder.setTotalAmount(totalAmount);
 
         Order savedFoodOrder = orderRepository.save(newOrder);
+        return convertToCreateResponseDTO(savedFoodOrder);
+    }
 
-        // Convert OrderItems to ResponseDTOs
-        List<OrderItemResponseDTO> orderItemDTOs = savedFoodOrder.getOrderItems().stream()
-                .map(orderItem -> new OrderItemResponseDTO(
-                        orderItem.getId(),
-                        orderItem.getMenuItem().getMenuItemName(),
-                        orderItem.getOrderQuantity(),
-                        orderItem.getOrderPrice(),
-                        orderItem.getOrderPrice().multiply(BigDecimal.valueOf(orderItem.getOrderQuantity())),
-                        orderItem.getSpecialInstructions()
-                ))
+    // For finding order ID
+    public OrderCreateResponseDTO getOrderById(Long id) {
+        Order findOrderId = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order Id doesn't exist"));
+        return convertToCreateResponseDTO(findOrderId);
+    }
+
+    //For finding order Number
+    public OrderCreateResponseDTO getOrderByNumber(String orderNumber) {
+        com.example.Food_Delivery_System_Cashless.Models.Order findOrderNumber =
+               orderRepository.findByOrderNumber(orderNumber)
+                        .orElseThrow(() -> new RuntimeException("Order Number doesn't exist"));
+        return convertToCreateResponseDTO(findOrderNumber);
+    }
+
+    // For updating order
+    @Transactional
+    public OrderCreateResponseDTO updateOrder(Long id, String newStatus) {
+        Order orderStats = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order Id doesn't Exist"));
+
+        String oldStatus = orderStats.getStatus();
+        orderStats.setStatus(newStatus);
+
+        switch (newStatus) {
+            case "CONFIRMED":
+                orderStats.setConfirmedAt(LocalDateTime.now());
+                break;
+            case "PREPARING":
+                orderStats.setPreparingAt(LocalDateTime.now());
+                break;
+            case "READY":
+                orderStats.setReadyAt(LocalDateTime.now());
+                break;
+            case "PICKED_UP":
+                orderStats.setPickedUpAt(LocalDateTime.now());
+                break;
+            case "DELIVERED":
+                orderStats.setDeliveredAt(LocalDateTime.now());
+                break;
+        }
+
+        Order savedOrder = orderRepository.save(orderStats);
+        return convertToCreateResponseDTO(savedOrder);
+    }
+
+    // For cancelling order
+    @Transactional
+    public OrderCreateResponseDTO cancelOrder(Long id, String cancelReason, String cancelledBy) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order Id doesn't exist"));
+
+        if (!order.getStatus().equals("PENDING")
+                && !order.getStatus().equals("CONFIRMED")) {
+            throw new RuntimeException("Order cannot be cancelled in current status: " + order.getStatus());
+        }
+
+        order.setStatus("CANCELLED");
+        order.setCancelledBy(cancelledBy);
+        order.setCancelReason(cancelReason);
+        order.setCancelledAt(LocalDateTime.now());
+
+        Order savedOrder = orderRepository.save(order);
+        return convertToCreateResponseDTO(savedOrder);
+    }
+
+    // For assigning Rider
+    @Transactional
+    public OrderCreateResponseDTO assignRider(Long id, Long riderId) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order Id doesn't exist"));
+        Rider rider = riderRepository.findById(riderId)
+                .orElseThrow(() -> new RuntimeException("Rider doesn't exist"));
+
+        order.setRider(rider);
+        order.setAssignedAt(LocalDateTime.now());
+        order.setStatus("PICKED_UP");
+
+        Order savedOrder = orderRepository.save(order);
+        return convertToCreateResponseDTO(savedOrder);
+    }
+
+    // For deleting order
+    public OrderDeleteResponseDTO deleteOrderByAdmin(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order Id doesn't exist"));
+        orderRepository.delete(order);
+
+        return new OrderDeleteResponseDTO(
+                "Order Successfully deleted",
+                LocalDateTime.now());
+    }
+
+    public List<OrderCreateResponseDTO> getOrderStatusByAdmin(String status) {
+        return orderRepository.findByStatus(status)
+                .stream().map(this::convertToCreateResponseDTO)
                 .collect(Collectors.toList());
+    }
 
-        // Create OrderProgressDTO
-        OrderProgressDTO progress = new OrderProgressDTO(
-                savedFoodOrder.getOrderDate(),
-                savedFoodOrder.getConfirmedAt(),
-                savedFoodOrder.getPreparingAt(),
-                savedFoodOrder.getReadyAt(),
-                savedFoodOrder.getAssignedAt(),
-                savedFoodOrder.getPickedUpAt(),
-                savedFoodOrder.getDeliveredAt(),
-                savedFoodOrder.getCancelledAt()
-        );
+    public List<OrderCreateResponseDTO> getOrdersByCustomers(Long customerId) {
+        return orderRepository.findByCustomerId(customerId)
+                .stream().map(this::convertToCreateResponseDTO)
+                .collect(Collectors.toList());
+    }
 
-        return new OrderCreateResponseDTO(
-                savedFoodOrder.getId(),
-                savedFoodOrder.getOrderNumber(),
-                savedFoodOrder.getTotalAmount(),
-                savedFoodOrder.getStatus(),
-                savedFoodOrder.getDeliveryAddress(),
-                savedFoodOrder.getRestaurant().getId(),
-                savedFoodOrder.getRestaurant().getRestaurantName(),
-                savedFoodOrder.getRider() != null ? savedFoodOrder.getRider().getId() : null,
-                savedFoodOrder.getRider() != null ? savedFoodOrder.getRider().getRiderName() : null,
-                savedFoodOrder.getCustomer().getId(),
-                savedFoodOrder.getCustomer().getCustomerName(),
-                progress,
-                orderItemDTOs
-        );
-
+    public List<OrderCreateResponseDTO> getOrdersByRestaurant(Long restaurantId) {
+        // ✅ FIXED
+        return orderRepository.findByRestaurantId(restaurantId)
+                .stream().map(this::convertToCreateResponseDTO)
+                .collect(Collectors.toList());
     }
 
     public String createOrderNumber() {
         return "ORD-" + UUID.randomUUID()
                 .toString().substring(0,5);
+    }
+
+    private OrderCreateResponseDTO convertToCreateResponseDTO(Order order) {
+        List<OrderItemResponseDTO> orderItemDTOs = order.getOrderItems().stream()
+                .map(this::convertToOrderItemDTO)
+                .collect(Collectors.toList());
+
+        OrderProgressDTO progress = new OrderProgressDTO(
+                order.getOrderDate(),
+                order.getConfirmedAt(),
+                order.getPreparingAt(),
+                order.getReadyAt(),
+                order.getAssignedAt(),
+                order.getPickedUpAt(),
+                order.getDeliveredAt(),
+                order.getCancelledAt()
+        );
+
+        return new OrderCreateResponseDTO(
+                order.getId(),
+                order.getOrderNumber(),
+                order.getTotalAmount(),
+                order.getStatus(),
+                order.getDeliveryAddress(),
+                order.getRestaurant().getId(),
+                order.getRestaurant().getRestaurantName(),
+                order.getRider() != null ? order.getRider().getId() : null,
+                order.getRider() != null ? order.getRider().getRiderName() : null,
+                order.getCustomer().getId(),
+                order.getCustomer().getCustomerName(),
+                progress,
+                orderItemDTOs
+        );
+    }
+
+    private OrderItemResponseDTO convertToOrderItemDTO(OrderItem orderItem) {
+        return new OrderItemResponseDTO(
+                orderItem.getId(),
+                orderItem.getMenuItem().getMenuItemName(),
+                orderItem.getOrderQuantity(),
+                orderItem.getOrderPrice(),
+                orderItem.getOrderPrice().multiply(BigDecimal.valueOf(orderItem.getOrderQuantity())),
+                orderItem.getSpecialInstructions()
+        );
     }
 }
